@@ -216,9 +216,9 @@ body {
     cursor: pointer;
   }
   
-  .product-button:hover {
+/*   .product-button:hover {
     background-color: #45a049;
-  }
+  } */
   
   .product-button.added-to-cart {
     background-color: grey; /* Grey when product is added */
