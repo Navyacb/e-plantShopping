@@ -2,12 +2,14 @@ import React, { useState,useEffect } from 'react';
 import './ProductList.css'
 import CartItem from './CartItem';
 import { addItem } from './CartSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 function ProductList() {
     const [showCart, setShowCart] = useState(false); 
     const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
     const dispatch  = useDispatch()
     const [addedToCart, setAddedToCart] = useState({});
+
+    const cart = useSelector(state => state.cart.items);
 
     const plantsArrayList = [
         {
@@ -285,20 +287,34 @@ const handlePlantsClick = (e) => {
   };
 
   const handleAddToCart = (product) => {
-    const plantlist = plantsArray.map(plant=>{
-        if(product.name === plant.name){
-            return {...plant,addClick:true}
-        }else{
-            return plant
-        }
+    const updatedPlantsArray = plantsArray.map(category => {
+        const updatedPlants = category.plants.map(plant => {
+            if (plant.name === product.name) {
+                return { ...plant, addClick: true };
+            }
+            return plant;
+        });
+        return { ...category, plants: updatedPlants };
     })
-    setPlantsArray(plantlist)
+    setPlantsArray(updatedPlantsArray)
     dispatch(addItem(product));
     setAddedToCart((prevState) => ({
         ...prevState,
         [product.name]: true, // Set the product name as key and value as true to indicate it's added to cart
     }));
     };
+
+    const handleRemoveFromCart = (product) => {
+        // Set `addClick` to false for the product being removed from the cart
+        setPlantsArray((prevPlantsArray) =>
+          prevPlantsArray.map((category) => ({
+            ...category,
+            plants: category.plants.map((plant) =>
+              plant.name === product.name ? { ...plant, addClick: false } : plant
+            ),
+          }))
+        );
+      };
 
     return (
         <div>
@@ -317,7 +333,11 @@ const handlePlantsClick = (e) => {
             </div>
             <div style={styleObjUl}>
                 <div> <a href="#" onClick={(e)=>handlePlantsClick(e)} style={styleA}>Plants</a></div>
-                <div> <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}><h1 className='cart'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="IconChangeColor" height="68" width="68"><rect width="156" height="156" fill="none"></rect><circle cx="80" cy="216" r="12"></circle><circle cx="184" cy="216" r="12"></circle><path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path></svg></h1></a></div>
+                <div> <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}><h1 className='cart'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="IconChangeColor" height="68" width="68"><rect width="156" height="156" fill="none"></rect><circle cx="80" cy="216" r="12"></circle><circle cx="184" cy="216" r="12"></circle><path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path></svg>
+                {cart.length > 0 && (
+                            <span className="cart-count">{cart.length}</span>
+                        )}
+                </h1></a></div>
             </div>
         </div>
         {!showCart? (
@@ -332,7 +352,7 @@ const handlePlantsClick = (e) => {
                                     <div className="product-title">{plant.name}</div>
                                     <div>{plant.description}</div>
                                     <div className='product-price'>{plant.cost}</div>
-                                    <button  className="product-button" onClick={() => handleAddToCart(plant)}>{plant.addClick ? 'Added to cart' : 'Add to Cart'}</button>
+                                    <button  className="product-button" disabled={plant.addClick}  onClick={() => handleAddToCart(plant)}>{plant.addClick ? 'Added to cart' : 'Add to Cart'}</button>
                                 </div>
                                 ))
                     }
@@ -342,7 +362,7 @@ const handlePlantsClick = (e) => {
 
         </div>
  ) :  (
-    <CartItem onContinueShopping={handleContinueShopping}/>
+    <CartItem onContinueShopping={handleContinueShopping} onRemoveItem={handleRemoveFromCart}/>
 )}
     </div>
     );
